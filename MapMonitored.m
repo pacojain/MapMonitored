@@ -4,7 +4,7 @@ BeginPackage["MapMonitored`"]
 
 
 MapMonitored::usage = "MapMonitored[f, expr] works like Map, but displays a dynamically updated index of the element currently being operated upon."
-CheckMapMonitored::usage = "CheckMapMonitored[f, expr] works like MapMonitored, but additionally exits the Map operation (or performs the action specified by the option \"MessageFunction\") whenever a message is generated."
+CheckMapMonitored::usage = "CheckMapMonitored[f, expr] works like MapMonitored, but additionally exits the Map operation (or performs another action, as specified by the option \"MessageFunction\", on Sequence[index, item value]) whenever a message is generated."
 Begin["`Private`"]
 
 
@@ -20,14 +20,12 @@ MapMonitored[f_, list_, opts: OptionsPattern[{"DisplayFunction" -> None}]]:= Mod
 
 
 ClearAll[CheckMapMonitored]
-CheckMapMonitored[f_, list_, opts: OptionsPattern[{"DisplayFunction" -> None, "MessageFunction" -> None}]]:= Module[
-	{g, i, currItem},
-	Switch[OptionValue["DisplayFunction"],
-		None, g= (i= First@#2; Check[f[#1], Print[i]; Return[currItem, Module]])&;
-			  Block[{i=2}, Monitor[MapIndexed[g, list], i]],
-		_,    g= (i= First@#2; currItem= OptionValue["DisplayFunction"][#1]; Check[f[#1], Print[Column[{i, currItem}]]; Return[currItem, Module]])&;
-			  Block[{i=2}, Monitor[MapIndexed[g, list], Column[{i, currItem}]]]
-	]
+CheckMapMonitored[f_, list_, opts: OptionsPattern[{"DisplayFunction" -> Automatic, "MessageFunction" -> Automatic}]]:= Module[
+	{g, i, messFunc, dispFunc},
+	dispFunc = OptionValue["DisplayFunction"] /. Automatic -> (Sequence[]&);
+	messFunc = OptionValue["MessageFunction"] /. Automatic -> Function[{index, item}, Print[Column[{index, dispFunc[item]}]]; Return[item, Module]];
+	g= (i= First@#2; Check[f[#1], messFunc[First[#2], #1]])&;
+	Block[{i=2}, Monitor[MapIndexed[g, list], i]]
 ]
 
 
