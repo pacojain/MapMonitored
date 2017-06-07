@@ -14,11 +14,10 @@ MapMonitored[f_, list_, opts: OptionsPattern[{"DisplayFunction" -> None}]]:= Mod
 	{g, i, currItem},
 	g= (i= First@#2; currItem= OptionValue["DisplayFunction"][#1]; f[#1])&;
 	Switch[OptionValue["DisplayFunction"],
-		None, Block[{i=2}, Monitor[MapIndexed[g, list], i]],
+		None, Block[{i=2}, Monitor[MapIndexed[g, list], If[Head[list] === Association, Row[{First[i], " (", Position[Keys[list], First[i]][[1, 1]], "/", Length[list], ")"}], i]]],
 		_, Block[{i=2}, Monitor[MapIndexed[g, list], Column[{i, currItem}]]]
 	]
 ]
-
 
 ClearAll[CheckMapMonitored]
 CheckMapMonitored[f_, list_, opts: OptionsPattern[{"DisplayFunction" -> Automatic, "MessageFunction" -> Automatic}]]:= Module[
@@ -26,7 +25,7 @@ CheckMapMonitored[f_, list_, opts: OptionsPattern[{"DisplayFunction" -> Automati
 	dispFunc = OptionValue["DisplayFunction"] /. Automatic -> (Nothing &);
 	messFunc = OptionValue["MessageFunction"] /. Automatic -> Function[{index, item}, Print[Column[{index, dispFunc[item]}]]; Return[item, Module]];
 	g= (i= First@#2; Check[f[#1], messFunc[First[#2], #1]])&;
-	Block[{i=2}, Monitor[MapIndexed[g, list], i]]
+	Block[{i=2}, Monitor[MapIndexed[g, list], If[Head[list] === Association, Row[{First[i], " (", Position[Keys[list], First[i]][[1, 1]], "/", Length[list], ")"}], i]]]
 ]
 
 ClearAll[DoMonitored]
