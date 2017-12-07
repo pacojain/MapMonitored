@@ -9,6 +9,23 @@ DoMonitored::usage = "DoMonitored[f, expr] works like Do, but displays a dynamic
 Begin["`Private`"]
 
 
+ClearAll[EchoTiming]
+SetAttributes[EchoTiming, HoldFirst]
+EchoTiming[expr_]:= Module[
+	{
+		res = expr//Timing//AbsoluteTiming,
+		abs, tim
+	},
+	Echo[abs=res//First,"absolute: "];
+	Echo[tim= res[[2,1]], "kernel: "];
+	res[[2,2]]
+]
+
+
+ClearAll[EchoLength]
+EchoLength[expr_]:= Echo[expr, "length: ", Length]
+
+
 ClearAll[MapMonitored]
 MapMonitored[f_, list_, opts: OptionsPattern[{"DisplayFunction" -> None}]]:= Module[
 	{g, i, currItem},
