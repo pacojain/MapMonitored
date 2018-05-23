@@ -6,6 +6,7 @@ BeginPackage["MapMonitored`"]
 MapMonitored::usage = "MapMonitored[f, expr] works like Map, but displays a dynamically updated index of the element currently being operated upon."
 CheckMapMonitored::usage = "CheckMapMonitored[f, expr] works like MapMonitored, but additionally exits the Map operation (or performs another action, as specified by the option \"MessageFunction\", on Sequence[index, item value]) whenever a message is generated."
 DoMonitored::usage = "DoMonitored[f, expr] works like Do, but displays a dynamically updated index of the element currently being operated upon."
+FileGrep::usage = "FileGrep[fileList, stringPat] returns a {fileNumber -> {lineNumber -> String...}} association of lines in fileList containing stringPat"
 Begin["`Private`"]
 
 
@@ -60,6 +61,26 @@ DoMonitored[body_, iter_, opts: OptionsPattern[{"DisplayFunction" -> None}]]:= M
 			_, Column[{count, dispFunc[iter[[1]]]}]
 		]
 	]
+]
+
+
+ClearAll[FileGrep]
+FileGrep[fileList_List, stringPat_]:= Module[
+	{
+		temp, res
+	},
+	res = Reap[
+		DoMonitored[
+			temp= ReadList[file, String];
+			temp= #-> temp[[#]]& /@ Range[Length[temp]];
+			temp= Select[temp, ! StringFreeQ[#[[2]], stringPat]&];
+			Sow[temp],
+		
+			{file, fileList}
+		]
+	][[2, 1]];
+	res = MapThread[Rule, {Range[Length[res]], res}];
+	Select[res, Length[#[[2]]]>0 &]
 ]
 
 
